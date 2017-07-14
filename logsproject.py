@@ -25,11 +25,11 @@ def getpopart(cursor):
     '''
 
     # SQL matches log path to titles substring the length of the log path
-    cursor.execute('''select striptitles.title, parsedlog.hits
-    from parsedlog, striptitles
-    where parsedlog.titles=substr(striptitles.title,1,length(parsedlog.titles))
-    group by title, hits
-    order by hits desc
+    cursor.execute('''select articles.title, count(log.path) as views
+    from log, articles
+    where log.path=concat('/article/', articles.slug)
+    group by title, log.path
+    order by views desc
     limit 3;''')
 
     articles = cursor.fetchall()
@@ -49,13 +49,12 @@ def getpopauth(cursor):
     '''
 
     # SQL matches on logpath, article title, and author
-    cursor.execute('''select authors.name, SUM(parsedlog.hits) as hits
-    from parsedlog, striptitles,authors
-    where parsedlog.titles=substr(striptitles.title,1,length(parsedlog.titles))
-    and authors.id = striptitles.author
+    cursor.execute('''select authors.name, count(*) as views
+    from log, articles, authors
+    where log.path=concat('/article/', articles.slug)
+    and authors.id = articles.author
     group by authors.name
-    order by hits desc
-    limit 3;''')
+    order by views desc;''')
 
     authors = cursor.fetchall()
 
